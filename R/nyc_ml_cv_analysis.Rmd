@@ -1,0 +1,208 @@
+---
+title: "nyc_ml_cv_analysis"
+author: "Ryan Chen"
+date: "2025-11-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(xgboost)
+
+theme_set(theme_light())
+```
+
+### Data Setup
+```{r}
+nyc_model <- read_csv("data/processed/nyc_combined.csv") %>% 
+  mutate(
+    month = hour(pickup_hour),
+    hour = hour(pickup_hour),
+    dow = as.factor(dow),
+    is_major_holiday = as.factor(is_major_holiday),
+    conditions = as.factor(conditions)
+  ) %>% 
+  select(-pickup_hour)
+```
+
+### Data Split
+```{r}
+set.seed(67)
+
+data_split <- initial_split(nyc_model, prop = 0.8)
+training_data <- training(data_split)
+testing_data <- testing(data_split)
+```
+
+### Recipe
+```{r}
+# Using step_dummy in order to change categorical values into numeric binary terms
+# Using
+nyc_recipe <- recipe(trips ~ ., data = training_data) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
+```
+
+### Linear Model
+```{r}
+linear_model <- linear_reg() %>% 
+  set_engine("lm")
+
+lm_workflow <- workflow() %>%
+  add_recipe(nyc_recipe) %>%
+  add_model(linear_model)
+
+lm_fit <- lm_workflow %>% fit(data = training_data)
+
+lm_pred <- predict(lm_fit, testing_data) %>%
+  bind_cols(testing_data)
+
+lm_pred %>% metrics(truth = trips, estimate = .pred)
+```
+
+### Random Forest
+```{r}
+random_forest <- rand_forest(trees = 500) %>% 
+  set_engine("ranger", verbose = TRUE) %>% 
+  set_mode("regression")
+
+rf_workflow <- workflow() %>% 
+  add_recipe(nyc_recipe) %>%
+  add_model(random_forest)
+
+rf_fit <- rf_workflow %>% fit(data = training_data)
+
+rf_pred <- predict(rf_fit, testing_data) %>% 
+  bind_cols(testing_data)
+
+rf_pred %>% metrics(truth = trips, estimate = .pred)
+```
+
+### XGBoost
+```{r}
+xgb_model <- boost_tree(
+  trees = 670,
+  tree_depth = 7,
+  learn_rate = 0.1,
+  loss_reduction = 0.1,
+  sample_size = 0.8
+) %>%
+  set_engine("xgboost", verbose = 2) %>%
+  set_mode("regression")
+
+xgb_workflow <- workflow() %>% 
+  add_recipe(nyc_recipe) %>%
+  add_model(xgb_model)
+
+xgb_fit <- xgb_workflow %>% fit(data = training_data)
+
+xgb_pred <- predict(xgb_fit, testing_data) %>% 
+  bind_cols(testing_data)
+
+xgb_pred %>% metrics(truth = trips, estimate = .pred)
+```
+
+```{r}
+bind_rows(
+  lm_pred %>% metrics(truth = trips, estimate = .pred) %>% mutate(model = "Linear Model"),
+  rf_pred %>% metrics(truth = trips, estimate = .pred) %>% mutate(model = "Random Forest"),
+  xgb_pred %>% metrics(truth = trips, estimate = .pred) %>% mutate(model = "XG Boost")
+) %>%
+  filter(.metric %in% c("mae", "rmse", "rsq")) %>%
+  ggplot(aes(x = .estimate, y = .metric, color = model)) +
+  geom_point(size = 3) +
+  facet_wrap(~ .metric, scales = "free", ncol = 1, drop = TRUE) +
+  labs(title = "Cross Validated Accuracy Measures",
+       subtitle = "Based on NYC High Volume For Hire Vehicles",
+       x = "",
+       y = "",
+       color = "Model Type")
+```
+
+
+
+### Geospatial Imaging
+```{r}
+
+# NYC Taxi Zone Mapping
+
+library(sf)
+
+taxi_zones <- st_read("data/external/taxi_zones/taxi_zones.shp")
+
+plot(taxi_zones["geometry"])
+
+ggplot(taxi_zones) +
+  geom_sf() +
+  coord_sf(expand = 0.1)
+```
+
+```{r}
+
+# Geospatial Visualization for predicted trip means
+
+xgb_zone_pred <- xgb_pred %>%
+  group_by(PULocationID) %>%
+  summarise(pred_mean = mean(.pred, na.rm = TRUE))
+
+taxi_predicted <- taxi_zones %>%
+  left_join(
+    xgb_zone_pred, by = c("LocationID" = "PULocationID")
+  )
+
+p1 <- ggplot(taxi_predicted) +
+  geom_sf(aes(fill = pred_mean), size = 0.1) +
+  scale_fill_distiller(type = "div", direction = -1) +
+  labs(title = "Geospatial Mapping W/ Predicted Values",
+       fill = "Prediction Mean")
+
+
+# Geospatial Visualization for true testing_data value means
+
+testing_zone_pred <- testing_data %>% 
+  group_by(PULocationID) %>% 
+  summarise(pred_mean = mean(trips))
+
+taxi_testing_predicted <- taxi_zones %>% 
+  left_join(
+    testing_zone_pred, by = c("LocationID" = "PULocationID")
+  )
+
+p2 <- ggplot(taxi_testing_predicted) +
+  geom_sf(aes(fill = pred_mean), size = 0.1) +
+  scale_fill_distiller(type = "div", direction = -1) +
+  labs(title = "Geospatial Mapping W/ Testing Data Values",
+       fill = "Testing Data Mean")
+
+# Side by Side Comparison
+library(cowplot)
+
+plot_grid(p1, p2, ncol = 2)
+```
+
+# Checking difference in means between prediction values and testing data values
+```{r}
+zone_joined <- full_join(
+  xgb_zone_pred,
+  testing_zone_pred,
+  by = "PULocationID"
+) %>% 
+  mutate(diff_means = pred_mean.x - pred_mean.y)
+
+zone_joined
+
+zone_joined %>% 
+  summarise(mean_diff = mean(diff_means))
+
+# Predicted values on average were around 0.62 for hire vehicles off
+# The average for hire vehicles an hour per location and hour was 106
+# Data seems very strong
+```
+
+

@@ -1,0 +1,27 @@
+{
+    "id": "126FDADB",
+    "path": "~/Documents/RProjects/nyc-fhv-demand-forecasting/data/processed/nyc_combined_data.R",
+    "project_path": "data/processed/nyc_combined_data.R",
+    "type": "r_source",
+    "hash": "580773423",
+    "contents": "",
+    "dirty": false,
+    "created": 1763408606352.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "25,32",
+        "scrollLine": "11"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1763430529,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1763430529592,
+    "read_only": false,
+    "read_only_alternatives": []
+}
