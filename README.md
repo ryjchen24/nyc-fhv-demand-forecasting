@@ -1,8 +1,9 @@
-# nyc-fhv-demand-forecasting
-
 # NYC Taxi and Ride Data Analysis
 
 This project analyzes New York City for hire vehicles (Uber and Lyft) to explore patterns in ride demand, distributions in trips, and geospatial trends. It includes data scraping, processing, visualization, and predictive modeling to gain insight on how factors such as weather, day, time, etc. affect the usage of for hire vehicle services.
+
+
+![RStudio Screenshot](screenshots/geospatial_visualization.png)
 
 ---
 
@@ -48,11 +49,30 @@ After processing my data such that for every hour at each location ID there was 
 
 Initially, I did exploratory visualization with this data. Below include the total number of trips per hour throughout the timeframe, a heat map popular times to travel throughout the day, and a ridgeline graph using the ggridges package that gave a better visualization of the popular travel times during a given day.
 
+
+![RStudio Screenshot](screenshots/fhvhv_per_hour.png)
+
+![RStudio Screenshot](screenshots/heat_map.png)
+
+![RStudio Screenshot](screenshots/ridgeline_graph.png)
+
+
 I then used did predictive modeling using cross validation on my data. I training and testing splits (80/20 split) and ran a linear model, random forest, and eXtreme Gradient Boosting (xgboost). I then got their respective metrics to determine the overall effectiveness of each model.
 
-By far the xgboost model was the most effective, with an rsq of around 0.9, rmse of 38, and mae of 21.8. This data shows that about 90% of the variation in the data is explained by my xgboost model, which is very effective considering the sheer amount of data that was used (over 70 million entry points). 
+
+![RStudio Screenshot](screenshots/CV_accuracy.png)
+
+
+By far the xgboost model was the most effective (as seen in the graph above), with an rsq of around 0.9, rmse of 38, and mae of 21.8. This data shows that about 90% of the variation in the data is explained by my xgboost model, which is very effective considering the sheer amount of data that was used (over 70 million entry points). 
+
+
+![RStudio Screenshot](screenshots/xgb_pred_metrics.png)
+
 
 I used my XGBoost model to generate predictions for the mean number of trips per day in New York City and created a geospatial visualization comparing these predicted values with the actual mean trips from the testing data. As shown in the two maps below, the predicted and actual values are very similar. Further analysis revealed that, on average, the model’s predicted mean trips per location per day were only 0.62 trips off from the actual values, which demonstrates high accuracy. Overall, the XGBoost model was highly effective in predicting for-hire vehicle usage in New York City. This predictive modeling approach also highlights how factors such as weather conditions, holidays, and date and time can influence for-hire vehicle demand, making it a strong example of applied data science in transportation.
+
+![RStudio Screenshot](screenshots/geospatial_visualization.png)
+
 
 ---
 ## Installation
