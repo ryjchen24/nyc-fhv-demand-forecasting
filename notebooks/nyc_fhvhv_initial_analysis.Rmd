@@ -1,0 +1,102 @@
+---
+title: "nyc_fhvhv_initial_analysis"
+author: "Ryan Chen"
+date: "2025-11-18"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggridges)
+
+theme_set(theme_light())
+```
+
+```{r}
+nyc_combined <- read_csv("data/processed/nyc_combined.csv")
+```
+
+### Basic Analysis
+```{r}
+nyc_combined %>% 
+  head(20)
+
+nyc_combined %>% 
+  group_by(PULocationID) %>% 
+  summarise(total_trips = sum(trips)) %>% 
+  arrange(desc(total_trips))
+
+nyc_combined %>% 
+  group_by(dow) %>% 
+  summarise(avg_trips = mean(trips)) %>% 
+  arrange(desc(avg_trips))
+
+nyc_combined %>% 
+  group_by(conditions) %>% 
+  summarise(mean_trips = mean(trips))
+
+# Seems to have the most Uber/Lyft drives during midday/afternoon
+nyc_combined %>% 
+  mutate(hour = hour(pickup_hour)) %>% 
+  group_by(PULocationID, hour) %>% 
+  summarise(total_trips = sum(trips), .groups = "drop") %>% 
+  group_by(PULocationID) %>% 
+  slice_max(total_trips) %>% 
+  arrange(desc(total_trips))
+```
+
+### Graphical Analysis
+```{r}
+nyc_combined %>% 
+  mutate(hour = hour(pickup_hour)) %>%
+  group_by(hour) %>% 
+  summarise(total_trips = sum(trips), .group = "drop") %>% 
+  ggplot(aes(hour, total_trips)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Uber/Lyft Requests Per Hour",
+       x = "Hour",
+       y = "Total Trips")
+
+nyc_combined %>%
+  mutate(hour = hour(pickup_hour)) %>%
+  group_by(dow, hour) %>%
+  summarise(total_trips = sum(trips), .groups = "drop") %>%
+  ggplot(aes(x = hour, y = dow, fill = total_trips)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  labs(title = "Heatmap of Trips by Hour and Day of Week",
+       x = "Hour",
+       y = "",
+       fill = "Total Trips")
+
+nyc_combined %>%
+  mutate(hour = hour(pickup_hour)) %>%
+  group_by(dow, hour) %>% 
+  summarise(total_trips = sum(trips), .groups = "drop") %>% 
+  ggplot(aes(x = hour, y = dow, height = total_trips, group = dow, fill = dow)) +
+  geom_density_ridges(stat = "identity", alpha = 0.7) +
+  labs(title = "Ridgeline Graph of Trips/Hour by Weekday",
+       x = "Hour",
+       y = "",
+       fill = "Day of Week")
+```
+
+
+```{r}
+nyc_combined %>% 
+  group_by(conditions) %>% 
+  summarise(mean_trips = mean(trips)) %>% 
+  ggplot(aes(conditions, mean_trips, fill = conditions)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Mean Trips by Weather Conditions",
+       x = "",
+       y = "Mean Trips")
+```
+
