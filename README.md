@@ -10,7 +10,7 @@ This project analyzes New York City for hire vehicles (Uber and Lyft) to explore
 ## Features
 
 - **Data Processing**: Clean, merge, and aggregate NYC taxi and ride-hailing datasets (yellow, green taxis, and FHVs).  
-- **Exploratory Data Analysis: Analyze trip counts, hourly/daily trends, and ride distribution by location.  
+- **Exploratory Data Analysis**: Analyze trip counts, hourly/daily trends, and ride distribution by location.  
 - **Geospatial Mapping**: Visualize trip intensity across NYC boroughs and taxi zones using `sf` and `ggplot2`.  
 - **Predictive Modeling**: Train and evaluate models (linear regression, random forest, and xg boost) to predict trip counts based on time, location, and weather.  
 - **Cross-Validation & Model Comparison**: Compare performance metrics (RMSE, R², MAE) for different models.  
