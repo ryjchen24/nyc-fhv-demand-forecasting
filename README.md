@@ -73,6 +73,7 @@ I used my XGBoost model to generate predictions for the mean number of trips per
 
 ![RStudio Screenshot](screenshots/geospatial_visualization.png)
 
+Based on this data, it seems that certain factors, such as time of day, location, and the weather conditions such as rain or snow can have a large influence on the use of Uber and Lyft rides while other factors such as temperature, day of week, and holidays don't have as large of an impact on for-hire rides. This data could largely benefit transportation companies as it can help determine how to scale their businesses and optimize ride usage by employment of drivers in certain locations. For example, our data showed a surprising amount of drives are conducted very early in the morning rather than in the evening (possibly due to social events, clubbing, etc. at night). Based on this data, one possible change companies could make would be to create larger incentives for drivers to work at night, increasing the total number of rides the company can get. Overall, this data proves that there is much to be learned about for hire vehicles through external factors and how it can be used to optimize the industry.
 
 ---
 ## Installation
