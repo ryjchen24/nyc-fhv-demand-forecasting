@@ -19,6 +19,8 @@ This project analyzes New York City for hire vehicles (Uber and Lyft) to explore
 
 ## Data
 
+Data was provided by New York City's TLC Trip Record Data and Visual Crossing's Weather API
+
 - **Raw Data**: NYC taxi trip data and FHV (For-Hire Vehicle) data in CSV or Parquet format.  
 - **Taxi Zones**: Shapefiles (`taxi_zones.shp`) used for geospatial mapping.  
 - **Weather Data**: Optional weather data for predictive modeling.
